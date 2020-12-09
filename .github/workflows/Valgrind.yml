@@ -1,0 +1,31 @@
+on: [push, pull_request]
+
+name: Valgrind Test
+
+jobs:
+  valgrind-test:
+    name: Valgrind Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout submodules
+        shell: bash
+        run: |
+            auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+            git submodule sync --recursive
+            git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --no-run
+      - name: Install Valgrind
+        run: sudo apt-get install -y valgrind
+      - name: Run Valgrind
+        run: |
+          ls target/debug/deps/fasttext-* | grep -v '\.d' | xargs -I {} valgrind --leak-check=full --show-leak-kinds=all {}
+          ls target/debug/deps/test_fasttest-* | grep -v '\.d' | xargs -I {} valgrind --leak-check=full --show-leak-kinds=all {}
