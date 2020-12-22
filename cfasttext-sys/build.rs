@@ -12,8 +12,8 @@ fn fail_on_empty_directory(name: &str) {
 }
 
 fn build_cfasttext() {
+    //        .build_target("cfasttext_static")
     let dst = cmake::Config::new("cfasttext")
-        .build_target("cfasttext_static")
         .build();
     println!("cargo:rustc-link-search=native={}/build", dst.display());
     println!("cargo:rustc-link-lib=static=cfasttext_static");
